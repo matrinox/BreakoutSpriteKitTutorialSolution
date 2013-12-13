@@ -19,10 +19,13 @@ static const uint32_t bottomCategory = 0x1 << 1; // 0000000000000000000000000000
 static const uint32_t blockCategory = 0x1 << 2;  // 00000000000000000000000000000100
 static const uint32_t paddleCategory = 0x1 << 3; // 00000000000000000000000000001000
 
+static const int blockHeight = 22.0f;
 
 @interface BreakoutGameScene()
 
 @property (nonatomic) BOOL isFingerOnPaddle;
+@property (nonatomic) BOOL gameStart;
+@property (nonatomic, strong) SKSpriteNode *ball;
 
 @end
 
@@ -61,8 +64,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
         // 6
         ball.physicsBody.allowsRotation = NO;
         ball.physicsBody.collisionBitMask = paddleCategory | blockCategory;
-		
-        [ball.physicsBody applyImpulse:CGVectorMake(10.0f, -10.0f)];
+		self.ball = ball;
         
         SKSpriteNode* paddle = [[SKSpriteNode alloc] initWithImageNamed: @"paddle.png"];
         paddle.name = paddleCategoryName;
@@ -104,7 +106,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
 			}
 			
             SKSpriteNode* block = [SKSpriteNode spriteNodeWithImageNamed:@"block.png"];
-			block.size = CGSizeMake(blockWidth, 22.0f);
+			block.size = CGSizeMake(blockWidth, blockHeight);
             block.position = CGPointMake((columnPosition-0.5f)*block.size.width + (columnPosition-1)*padding + xOffset, self.frame.size.height - rowPosition * ( block.size.height + padding ));
             block.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:block.frame.size];
             block.physicsBody.allowsRotation = NO;
@@ -128,6 +130,8 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
         NSLog(@"Began touch on paddle");
         self.isFingerOnPaddle = YES;
     }
+	
+	self.gameStart = YES;
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event {
@@ -189,16 +193,25 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
 	return YES;
 }
 
+- (void)setGameStart:(BOOL)gameStart {
+	if ( !_gameStart && gameStart ) {
+		[self.ball.physicsBody applyImpulse:CGVectorMake(10.0f, -10.0f)];
+	}
+	_gameStart = gameStart;
+}
+
 - (void)update:(CFTimeInterval)currentTime {
-    /* Called before each frame is rendered */
-    SKNode* ball = [self childNodeWithName: ballCategoryName];
-    static int maxSpeed = 1000;
-    float speed = sqrt(ball.physicsBody.velocity.dx*ball.physicsBody.velocity.dx + ball.physicsBody.velocity.dy * ball.physicsBody.velocity.dy);
-    if (speed > maxSpeed) {
-        ball.physicsBody.linearDamping = 0.4f;
-    } else {
-        ball.physicsBody.linearDamping = 0.0f;
-    }
+	if ( self.gameStart ) {
+		/* Called before each frame is rendered */
+		SKNode* ball = [self childNodeWithName: ballCategoryName];
+		static int maxSpeed = 1000;
+		float speed = sqrt(ball.physicsBody.velocity.dx*ball.physicsBody.velocity.dx + ball.physicsBody.velocity.dy * ball.physicsBody.velocity.dy);
+		if (speed > maxSpeed) {
+			ball.physicsBody.linearDamping = 0.1f;
+		} else {
+			ball.physicsBody.linearDamping = 0.0f;
+		}
+	}
 }
 
 @end
