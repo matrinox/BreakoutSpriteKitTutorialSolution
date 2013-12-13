@@ -20,6 +20,10 @@ static const uint32_t blockCategory = 0x1 << 2;  // 0000000000000000000000000000
 static const uint32_t paddleCategory = 0x1 << 3; // 00000000000000000000000000001000
 
 static const int blockHeight = 44.0f;
+static const int numberOfColumns = 5;
+static const int numberOfRows = 3;
+static const float xPadding = 10.0f;
+static const float yPadding = 5.0f;
 
 @interface BreakoutGameScene()
 
@@ -90,13 +94,10 @@ static const int blockHeight = 44.0f;
         self.physicsWorld.contactDelegate = self;
         
         // 1 Store some useful variables
-        int numberOfColumns = 5;
-		int numberOfRows = 3;
 		int totalNumberOfBlocks = numberOfColumns * numberOfRows;
-        float padding = 5.0f;
-        int blockWidth = ( self.size.width - 40.0f ) / numberOfColumns - padding;
+        int blockWidth = self.blockWidth;
         // 2 Calculate the xOffset
-        float xOffset = (self.frame.size.width - (blockWidth * numberOfColumns + padding * (numberOfColumns-1))) / 2;
+        float xOffset = (self.frame.size.width - (blockWidth * numberOfColumns + xPadding * (numberOfColumns-1))) / 2;
         // 3 Create the blocks and add them to the scene
 		int rowPosition = 0;
         for (int i = 1; i <= totalNumberOfBlocks; i++) {
@@ -108,7 +109,7 @@ static const int blockHeight = 44.0f;
             SKSpriteNode* block = [SKSpriteNode spriteNodeWithImageNamed:@"block.png"];
 			int specificBlockHeight = rand() % 2 ? blockHeight : blockHeight / 2;
 			block.size = CGSizeMake(blockWidth, specificBlockHeight);
-            block.position = CGPointMake((columnPosition-0.5f)*block.size.width + (columnPosition-1)*padding + xOffset, self.frame.size.height - rowPosition * ( blockHeight + padding ));
+            block.position = CGPointMake((columnPosition-0.5f)*block.size.width + (columnPosition-1)*xPadding + xOffset, self.frame.size.height - rowPosition * ( blockHeight + yPadding ));
             block.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:block.frame.size];
             block.physicsBody.allowsRotation = NO;
             block.physicsBody.friction = 0.0f;
