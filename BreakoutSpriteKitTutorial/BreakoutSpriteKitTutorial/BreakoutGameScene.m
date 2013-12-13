@@ -25,6 +25,8 @@ static const int numberOfRows = 3;
 static const float xPadding = 10.0f;
 static const float yPadding = 5.0f;
 
+static const BOOL dragMode = NO;
+
 @interface BreakoutGameScene()
 
 @property (nonatomic) BOOL isFingerOnPaddle;
@@ -123,36 +125,54 @@ static const float yPadding = 5.0f;
 }
 
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
-    /* Called when a touch begins */
-    UITouch* touch = [touches anyObject];
-    CGPoint touchLocation = [touch locationInNode:self];
-    
-    SKPhysicsBody* body = [self.physicsWorld bodyAtPoint:touchLocation];
-    if (body && [body.node.name isEqualToString: paddleCategoryName]) {
-        NSLog(@"Began touch on paddle");
-        self.isFingerOnPaddle = YES;
-    }
-	
+	/* Called when a touch begins */
+	UITouch *touch = [touches anyObject];
+	CGPoint touchLocation = [touch locationInNode:self];
+	if ( !dragMode ) {
+		[self repositionPaddleToX:touchLocation.x];
+	}
+	else {
+		SKPhysicsBody* body = [self.physicsWorld bodyAtPoint:touchLocation];
+		if (body && [body.node.name isEqualToString: paddleCategoryName]) {
+			NSLog(@"Began touch on paddle");
+			self.isFingerOnPaddle = YES;
+		}
+		
+	}
 	self.gameStart = YES;
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event {
-    // 1 Check whether user tapped paddle
-    if (self.isFingerOnPaddle) {
-        // 2 Get touch location
-        UITouch* touch = [touches anyObject];
-        CGPoint touchLocation = [touch locationInNode:self];
-        CGPoint previousLocation = [touch previousLocationInNode:self];
-        // 3 Get node for paddle
-        SKSpriteNode* paddle = (SKSpriteNode*)[self childNodeWithName: paddleCategoryName];
-        // 4 Calculate new position along x for paddle
-        int paddleX = paddle.position.x + (touchLocation.x - previousLocation.x);
-        // 5 Limit x so that the paddle will not leave the screen to left or right
-        paddleX = MAX(paddleX, paddle.size.width/2);
-        paddleX = MIN(paddleX, self.size.width - paddle.size.width/2);
-        // 6 Update position of paddle
-        paddle.position = CGPointMake(paddleX, paddle.position.y);
-    }
+	if ( !dragMode ) {
+		UITouch *touch = [touches anyObject];
+		CGPoint touchLocation = [touch locationInNode:self];
+		[self repositionPaddleToX:touchLocation.x];
+	}
+	else {
+		// 1 Check whether user tapped paddle
+		if (self.isFingerOnPaddle) {
+			// 2 Get touch location
+			UITouch *touch = [touches anyObject];
+			CGPoint touchLocation = [touch locationInNode:self];
+			CGPoint previousLocation = [touch previousLocationInNode:self];
+			[self repositionPaddleByX:touchLocation.x - previousLocation.x];
+		}
+	}
+}
+
+- (void)repositionPaddleToX:(int)paddleX {
+	SKSpriteNode *paddle = (SKSpriteNode *)[self childNodeWithName: paddleCategoryName];
+	// 5 Limit x so that the paddle will not leave the screen to left or right
+	paddleX = MAX(paddleX, paddle.size.width/2);
+	paddleX = MIN(paddleX, self.size.width - paddle.size.width/2);
+	// 6 Update position of paddle
+	paddle.position = CGPointMake(paddleX, paddle.position.y);
+}
+
+- (void)repositionPaddleByX:(int)diffX {
+	SKSpriteNode *paddle = (SKSpriteNode *)[self childNodeWithName: paddleCategoryName];
+	int paddleX = paddle.position.x + diffX;
+	[self repositionPaddleToX:paddleX];
 }
 
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
