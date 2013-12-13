@@ -107,9 +107,9 @@ static const float yPadding = 5.0f;
 			}
 			
             SKSpriteNode* block = [SKSpriteNode spriteNodeWithImageNamed:@"block.png"];
-			int specificBlockHeight = rand() % 2 ? blockHeight : blockHeight / 2;
-			block.size = CGSizeMake(blockWidth, specificBlockHeight);
-            block.position = CGPointMake((columnPosition-0.5f)*block.size.width + (columnPosition-1)*xPadding + xOffset, self.frame.size.height - rowPosition * ( blockHeight + yPadding ));
+			int specificBlockWidth = rand() % 2 ? blockWidth : blockWidth / 2;
+			block.size = CGSizeMake(specificBlockWidth, blockHeight);
+            block.position = CGPointMake((columnPosition-0.5f)*blockWidth + (columnPosition-1)*xPadding + xOffset, self.frame.size.height - rowPosition * ( blockHeight + yPadding ));
             block.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:block.frame.size];
             block.physicsBody.allowsRotation = NO;
             block.physicsBody.friction = 0.0f;
@@ -187,16 +187,20 @@ static const float yPadding = 5.0f;
 }
 
 - (void)ballHitsBlock:(SKSpriteNode *)node {
-	if ( node.size.height < blockHeight ) {
+	if ( node.size.width < self.blockWidth ) {
 		SKAction *shrink = [SKAction scaleBy:0.1f duration:0.25f];
 		[node runAction:shrink completion:^{
 			[node removeFromParent];
 		}];
 	}
 	else {
-		SKAction *shrink = [SKAction resizeToHeight:blockHeight/2 duration:0.25f];
+		SKAction *shrink = [SKAction resizeToWidth:self.blockWidth/2 duration:0.25f];
 		[node runAction:shrink];
 	}
+}
+
+- (int)blockWidth {
+	return ( self.size.width - 40.0f ) / numberOfColumns - xPadding;
 }
 
 - (BOOL)isGameWon {
