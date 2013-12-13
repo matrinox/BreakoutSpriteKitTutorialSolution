@@ -29,7 +29,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
 
 @implementation BreakoutGameScene
 
--(id)initWithSize:(CGSize)size {
+- (instancetype)initWithSize:(CGSize)size {
     if (self = [super initWithSize:size]) {
         SKSpriteNode* background = [SKSpriteNode spriteNodeWithImageNamed:@"bg.png"];
         background.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
@@ -60,7 +60,8 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
         ball.physicsBody.linearDamping = 0.0f;
         // 6
         ball.physicsBody.allowsRotation = NO;
-        
+        ball.physicsBody.collisionBitMask = paddleCategory | blockCategory;
+		
         [ball.physicsBody applyImpulse:CGVectorMake(10.0f, -10.0f)];
         
         SKSpriteNode* paddle = [[SKSpriteNode alloc] initWithImageNamed: @"paddle.png"];
@@ -87,27 +88,37 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
         self.physicsWorld.contactDelegate = self;
         
         // 1 Store some useful variables
-        int numberOfBlocks = 3;
-        int blockWidth = [SKSpriteNode spriteNodeWithImageNamed:@"block.png"].size.width;
-        float padding = 20.0f;
+        int numberOfColumns = 5;
+		int numberOfRows = 3;
+		int totalNumberOfBlocks = numberOfColumns * numberOfRows;
+        float padding = 5.0f;
+        int blockWidth = ( self.size.width - 40.0f ) / numberOfColumns - padding;
         // 2 Calculate the xOffset
-        float xOffset = (self.frame.size.width - (blockWidth * numberOfBlocks + padding * (numberOfBlocks-1))) / 2;
+        float xOffset = (self.frame.size.width - (blockWidth * numberOfColumns + padding * (numberOfColumns-1))) / 2;
         // 3 Create the blocks and add them to the scene
-        for (int i = 1; i <= numberOfBlocks; i++) {
+		int rowPosition = 0;
+        for (int i = 1; i <= totalNumberOfBlocks; i++) {
+			int columnPosition = ( i - 1 ) % ( numberOfColumns ) + 1;
+			if ( columnPosition == 1 ) {
+				rowPosition++;
+			}
+			
             SKSpriteNode* block = [SKSpriteNode spriteNodeWithImageNamed:@"block.png"];
-            block.position = CGPointMake((i-0.5f)*block.frame.size.width + (i-1)*padding + xOffset, self.frame.size.height * 0.8f);
+			block.size = CGSizeMake(blockWidth, 22.0f);
+            block.position = CGPointMake((columnPosition-0.5f)*block.size.width + (columnPosition-1)*padding + xOffset, self.frame.size.height - rowPosition * ( block.size.height + padding ));
             block.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:block.frame.size];
             block.physicsBody.allowsRotation = NO;
             block.physicsBody.friction = 0.0f;
             block.name = blockCategoryName;
             block.physicsBody.categoryBitMask = blockCategory;
+			block.physicsBody.dynamic = NO;
             [self addChild:block];
         }
     }
     return self;
 }
 
--(void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
+- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
     /* Called when a touch begins */
     UITouch* touch = [touches anyObject];
     CGPoint touchLocation = [touch locationInNode:self];
@@ -119,7 +130,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     }
 }
 
--(void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event {
+- (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event {
     // 1 Check whether user tapped paddle
     if (self.isFingerOnPaddle) {
         // 2 Get touch location
@@ -138,7 +149,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     }
 }
 
--(void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
+- (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
     self.isFingerOnPaddle = NO;
 }
 
@@ -169,17 +180,16 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     }
 }
 
--(BOOL) isGameWon {
-    int numberOfBricks = 0;
+- (BOOL)isGameWon {
     for (SKNode* node in self.children) {
         if ([node.name isEqual: blockCategoryName]) {
-            numberOfBricks++;
+            return NO;
         }
     }
-    return numberOfBricks <= 0;
+	return YES;
 }
 
--(void)update:(CFTimeInterval)currentTime {
+- (void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
     SKNode* ball = [self childNodeWithName: ballCategoryName];
     static int maxSpeed = 1000;
