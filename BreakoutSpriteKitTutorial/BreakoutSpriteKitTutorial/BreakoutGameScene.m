@@ -139,7 +139,7 @@ static const BOOL dragMode = NO;
 		}
 		
 	}
-	self.gameStart = YES;
+	[self startGame];
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event {
@@ -232,11 +232,11 @@ static const BOOL dragMode = NO;
 	return YES;
 }
 
-- (void)setGameStart:(BOOL)gameStart {
-	if ( !_gameStart && gameStart ) {
+- (void)startGame {
+	if ( !_gameStart ) {
 		[self.ball.physicsBody applyImpulse:CGVectorMake(10.0f, -10.0f)];
 	}
-	_gameStart = gameStart;
+	_gameStart = YES;
 }
 
 - (void)update:(CFTimeInterval)currentTime {
