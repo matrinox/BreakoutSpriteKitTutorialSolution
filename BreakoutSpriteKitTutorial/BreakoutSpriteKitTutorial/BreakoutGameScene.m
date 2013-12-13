@@ -176,12 +176,25 @@ static const int blockHeight = 22.0f;
         [self.view presentScene:gameOverScene];
     }
     if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == blockCategory) {
-        [secondBody.node removeFromParent];
+		[self ballHitsBlock:(SKSpriteNode *)secondBody.node];
         if ([self isGameWon]) {
             GameOverScene* gameWonScene = [[GameOverScene alloc] initWithSize:self.frame.size playerWon:YES];
             [self.view presentScene:gameWonScene];
         }
     }
+}
+
+- (void)ballHitsBlock:(SKSpriteNode *)node {
+	if ( node.size.height < blockHeight ) {
+		SKAction *shrink = [SKAction scaleBy:0.1f duration:0.5f];
+		[node runAction:shrink completion:^{
+			[node removeFromParent];
+		}];
+	}
+	else {
+		SKAction *shrink = [SKAction scaleBy:0.5f duration:0.5f];
+		[node runAction:shrink];
+	}
 }
 
 - (BOOL)isGameWon {
