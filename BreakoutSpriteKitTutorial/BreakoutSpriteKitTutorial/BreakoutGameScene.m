@@ -19,7 +19,7 @@ static const uint32_t bottomCategory = 0x1 << 1; // 0000000000000000000000000000
 static const uint32_t blockCategory = 0x1 << 2;  // 00000000000000000000000000000100
 static const uint32_t paddleCategory = 0x1 << 3; // 00000000000000000000000000001000
 
-static const int blockHeight = 22.0f;
+static const int blockHeight = 44.0f;
 
 @interface BreakoutGameScene()
 
@@ -106,8 +106,9 @@ static const int blockHeight = 22.0f;
 			}
 			
             SKSpriteNode* block = [SKSpriteNode spriteNodeWithImageNamed:@"block.png"];
-			block.size = CGSizeMake(blockWidth, blockHeight);
-            block.position = CGPointMake((columnPosition-0.5f)*block.size.width + (columnPosition-1)*padding + xOffset, self.frame.size.height - rowPosition * ( block.size.height + padding ));
+			int specificBlockHeight = rand() % 2 ? blockHeight : blockHeight / 2;
+			block.size = CGSizeMake(blockWidth, specificBlockHeight);
+            block.position = CGPointMake((columnPosition-0.5f)*block.size.width + (columnPosition-1)*padding + xOffset, self.frame.size.height - rowPosition * ( blockHeight + padding ));
             block.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:block.frame.size];
             block.physicsBody.allowsRotation = NO;
             block.physicsBody.friction = 0.0f;
@@ -186,13 +187,13 @@ static const int blockHeight = 22.0f;
 
 - (void)ballHitsBlock:(SKSpriteNode *)node {
 	if ( node.size.height < blockHeight ) {
-		SKAction *shrink = [SKAction scaleBy:0.1f duration:0.5f];
+		SKAction *shrink = [SKAction scaleBy:0.1f duration:0.25f];
 		[node runAction:shrink completion:^{
 			[node removeFromParent];
 		}];
 	}
 	else {
-		SKAction *shrink = [SKAction scaleBy:0.5f duration:0.5f];
+		SKAction *shrink = [SKAction resizeToHeight:blockHeight/2 duration:0.25f];
 		[node runAction:shrink];
 	}
 }
